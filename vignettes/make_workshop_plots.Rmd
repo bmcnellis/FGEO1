@@ -1,0 +1,55 @@
+---
+title: "make_workshop_plots"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{make_workshop_plots}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(FGEO1)
+library(ggplot2)
+```
+
+```{r processing_1}
+LAU_DEM_fl <- '../../data/LAU_DEM.tif'
+LAU_demography_fl <- '../../data/LAU_processed.csv'
+
+LAU_DEM <- terra::rast(LAU_DEM_fl)
+LAU <- read.csv(LAU_demography_fl)
+LAU_only5 <- LAU[which(LAU$CensusID == 5), ]
+# table(strptime(sapply(strsplit(LAU$ExactDate, ' '), \(xx) xx[1]), format = "%m/%d/%y")$year + 1900)
+# census 1 was 2008, census 2 was 2023, 5 years between
+```
+
+```{r table_1}
+# Table of sp + full sp x sample size + n alive + n dead
+table(LAU$sp, LAU$DFstatus)
+```
+
+```{r plot_1}
+# Stacked bar of dfstatus x sp
+```
+
+```{r plot_2}
+# Hist of elev x sp
+```
+
+```{r plot_3}
+# ggplot of DEM, points (alive), points (dead)
+```
+
+```{r extraneous, include = FALSE}
+# Base plot of DEM, points (alive), points(dead)
+plot(LAU_DEM)
+with(subset(LAU_only5, DFstatus == 'alive'), points(x, y, col = 'black', cex = 0.95, pch = 20))
+with(subset(LAU_only5, DFstatus == 'dead'), points(x, y, col = 'grey60', cex = 0.95, pch = 20))
+```
