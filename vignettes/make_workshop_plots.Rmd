@@ -7,19 +7,22 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
+```{r, include = FALSE, echo = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  fig.width = 8, 
+  fig.height = 5
 )
 ```
 
-```{r setup}
+```{r setup, echo = FALSE}
+# 
 library(FGEO1)
 library(ggplot2)
 ```
 
-```{r processing_1}
+```{r processing_1, echo = FALSE}
 LAU_DEM_fl <- '../../data/LAU_DEM.tif'
 LAU_demography_fl <- '../../data/LAU_processed.csv'
 
@@ -27,29 +30,85 @@ LAU_DEM <- terra::rast(LAU_DEM_fl)
 LAU <- read.csv(LAU_demography_fl)
 LAU_only5 <- LAU[which(LAU$CensusID == 5), ]
 # table(strptime(sapply(strsplit(LAU$ExactDate, ' '), \(xx) xx[1]), format = "%m/%d/%y")$year + 1900)
-# census 1 was 2008, census 2 was 2023, 5 years between
+# census 1 was 2008, census 2 was 2013, 5 years between
+LAU_only5$ELEV <- terra::extract(LAU_DEM, LAU_only5[, c('x', 'y')])[, 2]
 ```
 
-```{r table_1}
+```{r table_1, echo = FALSE}
+# multiple stems?
+print("Species (y) x number of stems (x):")
+table(LAU_only5$sp, LAU_only5$mstem)
+print("Number of unique tree ID with all stems:")
+length(unique(LAU_only5$treeID))
+print("Number of unique tree ID with only mstem = 0:")
+with(LAU_only5[which(LAU_only5$mstem == 0), ], length(unique(treeID)))
+# just remove the multi-stemmed individuals
+multi_ID <- LAU_only5[which(LAU_only5$mstem > 0), 'treeID']
+# 16127 before
+LAU_only5 <- LAU_only5[-which(LAU_only5$treeID %in% multi_ID), ]
+# 11821 after, but broken
+stop('cant just drop multi-stemmed, need better method')
+# for all the treeID in which mstem = 0 & DFstatus == 'dead', what is DFstatus of other stems?
+# if DFstatus of other stems can be a table, what is a table of whether that table is all 100% 'dead' or < 100% dead?
+```
+
+```{r table_2, echo = FALSE}
+# McMahon, Ariano, & Davies 2017, Ecosphere for studying mortality
 # Table of sp + full sp x sample size + n alive + n dead
-table(LAU$sp, LAU$DFstatus)
+tbl_1 <- table(LAU_only5$sp, LAU_only5$DFstatus)
+tbl_1 <- as.data.frame(matrix(data = tbl_1, nrow = dim(tbl_1)[1], ncol = dim(tbl_1)[2], dimnames = dimnames(tbl_1)))
+tbl_1$perc_dead <- round((tbl_1$dead / (tbl_1$alive + tbl_1$dead)), 4)
+tbl_1$annual_survivor <- (1 - tbl_1$perc_dead) ^ (1 / 5)
+# 1 minus perc dead is the survivorship
+tbl_1$annual_mortality <- 1 - tbl_1$annual_survivor
+tbl_1$perc_annual_mort <- round(tbl_1$annual_mortality * 100, 1)
+tbl_1[, c(3, 4, 5)] <- round(tbl_1[, c(3, 4, 5)], 3)
+print(tbl_1)
 ```
 
-```{r plot_1}
+```{r plot_1, echo = FALSE}
 # Stacked bar of dfstatus x sp
+ggplot(data = LAU_only5, aes(x = sp, fill = DFstatus)) +
+  geom_bar(position = 'stack', stat = 'count') +
+  scale_fill_manual(values = c('grey20', 'red'), labels = c('Alive', 'Dead')) +
+  
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(color = 'black'),
+    axis.text.y = element_text(color = 'black')
+  ) +
+  
+  labs(x = 'Species', y = 'n', fill = 'Status')
 ```
 
-```{r plot_2}
-# Hist of elev x sp
+```{r plot_2, echo = FALSE}
+
+# Boxplot of elev x sp
+ggplot(data = LAU_only5, aes(x = sp, y = ELEV)) + 
+  geom_boxplot() +
+  
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(color = 'black'),
+    axis.text.y = element_text(color = 'black')
+  ) +
+  labs(x = '', y = 'Elevation (m)')
 ```
 
-```{r plot_3}
-# ggplot of DEM, points (alive), points (dead)
+```{r plot_4, echo = FALSE}
+LAU_DEM_plot <- terra::plot(LAU_DEM, main = 'Laupahoehoe DEM')
+```
+```{r plot_6, echo = F}
+terra::plot(LAU_DEM, main = 'Laupahoehoe DEM + Alive Stems')
+with(subset(LAU_only5, DFstatus == 'alive'), points(x, y, col = 'black', cex = 0.6, pch = 20))
 ```
 
-```{r extraneous, include = FALSE}
+```{r process_2, echo = F}
+# could multiple stems be confounding the data?
+```
+
+```{r extraneous, echo = FALSE}
 # Base plot of DEM, points (alive), points(dead)
-plot(LAU_DEM)
-with(subset(LAU_only5, DFstatus == 'alive'), points(x, y, col = 'black', cex = 0.95, pch = 20))
-with(subset(LAU_only5, DFstatus == 'dead'), points(x, y, col = 'grey60', cex = 0.95, pch = 20))
+terra::plot(LAU_DEM, main = 'Laupahoehoe DEM + Dead Stems')
+with(subset(LAU_only5, DFstatus == 'dead'), points(x, y, col = 'grey40', cex = 0.6, pch = 20))
 ```
