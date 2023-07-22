@@ -1,5 +1,5 @@
 ---
-title: "make_workshop_plots"
+title: "ForestGEO Day 1-3: Preliminary Analysis"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{make_workshop_plots}
@@ -17,7 +17,6 @@ knitr::opts_chunk$set(
 ```
 
 ```{r setup, echo = FALSE}
-# 
 library(FGEO1)
 library(ggplot2)
 ```
@@ -42,19 +41,22 @@ print("Number of unique tree ID with all stems:")
 length(unique(LAU_only5$treeID))
 print("Number of unique tree ID with only mstem = 0:")
 with(LAU_only5[which(LAU_only5$mstem == 0), ], length(unique(treeID)))
-# just remove the multi-stemmed individuals
-multi_ID <- LAU_only5[which(LAU_only5$mstem > 0), 'treeID']
-# 16127 before
-LAU_only5 <- LAU_only5[-which(LAU_only5$treeID %in% multi_ID), ]
-# 11821 after, but broken
-stop('cant just drop multi-stemmed, need better method')
 # for all the treeID in which mstem = 0 & DFstatus == 'dead', what is DFstatus of other stems?
-# if DFstatus of other stems can be a table, what is a table of whether that table is all 100% 'dead' or < 100% dead?
+ivec <- LAU_only5$treeID[which(LAU_only5$DFstatus == 'dead')]
+ivec <- unique(ivec)
+
+ratio_of_dead_stems_to_total_stems <- sapply(ivec, \(xx) {
+  idf <- LAU_only5[which(LAU_only5$treeID == xx), ]
+  as.numeric(table(idf$DFstatus)['dead'] / sum(table(idf$DFstatus)))
+})
+table(ratio_of_dead_stems_to_total_stems)
+# when a tree ID has a dead stem, all of the stems associated with that tree ID are dead
 ```
 
 ```{r table_2, echo = FALSE}
 # McMahon, Ariano, & Davies 2017, Ecosphere for studying mortality
-# Table of sp + full sp x sample size + n alive + n dead
+# Table of sp + full sp x sample size + n alive + n deads
+LAU_only5 <- LAU_only5[which(LAU_only5$mstem == 0), ]
 tbl_1 <- table(LAU_only5$sp, LAU_only5$DFstatus)
 tbl_1 <- as.data.frame(matrix(data = tbl_1, nrow = dim(tbl_1)[1], ncol = dim(tbl_1)[2], dimnames = dimnames(tbl_1)))
 tbl_1$perc_dead <- round((tbl_1$dead / (tbl_1$alive + tbl_1$dead)), 4)
@@ -74,25 +76,11 @@ ggplot(data = LAU_only5, aes(x = sp, fill = DFstatus)) +
   
   theme_bw() +
   theme(
-    axis.text.x = element_text(color = 'black'),
+    axis.text.x = element_text(color = 'black', angle = 45, hjust = 1),
     axis.text.y = element_text(color = 'black')
   ) +
   
   labs(x = 'Species', y = 'n', fill = 'Status')
-```
-
-```{r plot_2, echo = FALSE}
-
-# Boxplot of elev x sp
-ggplot(data = LAU_only5, aes(x = sp, y = ELEV)) + 
-  geom_boxplot() +
-  
-  theme_bw() +
-  theme(
-    axis.text.x = element_text(color = 'black'),
-    axis.text.y = element_text(color = 'black')
-  ) +
-  labs(x = '', y = 'Elevation (m)')
 ```
 
 ```{r plot_4, echo = FALSE}
@@ -103,12 +91,21 @@ terra::plot(LAU_DEM, main = 'Laupahoehoe DEM + Alive Stems')
 with(subset(LAU_only5, DFstatus == 'alive'), points(x, y, col = 'black', cex = 0.6, pch = 20))
 ```
 
-```{r process_2, echo = F}
-# could multiple stems be confounding the data?
-```
-
 ```{r extraneous, echo = FALSE}
 # Base plot of DEM, points (alive), points(dead)
 terra::plot(LAU_DEM, main = 'Laupahoehoe DEM + Dead Stems')
 with(subset(LAU_only5, DFstatus == 'dead'), points(x, y, col = 'grey40', cex = 0.6, pch = 20))
+```
+
+```{r plot_2, echo = FALSE}
+# Boxplot of elev x sp
+ggplot(data = LAU_only5, aes(x = sp, y = ELEV)) + 
+  geom_boxplot() +
+  
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(color = 'black', angle = 45, hjust = 1),
+    axis.text.y = element_text(color = 'black')
+  ) +
+  labs(x = '', y = 'Elevation (m)')
 ```

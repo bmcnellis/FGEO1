@@ -29,10 +29,10 @@ LAU$mstem <- as.numeric(LAU$mstem)
 
 # short-term filters
 # remove all missing DBH that are not CIB*
-row.names(LAU) <- seq.int(nrow(LAU))
-miss_DBH <- LAU[!(LAU$sp %in% c('CIBMEN', 'CIBGLA', 'CIBCHA')), ]
-miss_DBH <- miss_DBH[is.na(miss_DBH$dbh), ]
-LAU <- LAU[-as.numeric(row.names(miss_DBH)), ]
+#row.names(LAU) <- seq.int(nrow(LAU))
+#miss_DBH <- LAU[!(LAU$sp %in% c('CIBMEN', 'CIBGLA', 'CIBCHA')), ]
+#miss_DBH <- miss_DBH[is.na(miss_DBH$dbh), ]
+#LAU <- LAU[-as.numeric(row.names(miss_DBH)), ]
 # use only main stems
 #LAU <- LAU[which(LAU$mstem == 0), ]
 # drop the METPOL which were not measured in every census
@@ -45,7 +45,7 @@ LAU <- LAU[which(LAU$CensusID %in% c(1, 5)), ]
 LAU <- LAU[-which(LAU$DFstatus == 'prior'), ]
 LAU[which(LAU$DFstatus %in% c('gone', 'missing')), 'DFstatus'] <- 'dead'
 # all trees alive in first census
-# just use species with > 100 total stems
+# just use species with > 200 total stems
 sp_tbl <- table(LAU$sp, LAU$DFstatus)
 sp_tbl <- as.data.frame(sp_tbl)
 sp_tbl <- aggregate(sp_tbl$Freq, by = list(sp_tbl$Var1), FUN = sum)
