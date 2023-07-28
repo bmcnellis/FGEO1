@@ -32,6 +32,8 @@ ppt_list <- lapply(ppt_zips, \(ii) {
 
 })
 
+# instead of mean temperature, do high temperature events?
+
 ppt_df <- do.call('rbind', ppt_list)
 ppt_df <- ppt_df[, c('Station.Name', 'value', 'year', 'month')]
 # aggregate(ppt_df$value, by = list(ppt_df$year), FUN = sum)

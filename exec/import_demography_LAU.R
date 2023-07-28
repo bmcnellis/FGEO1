@@ -49,6 +49,6 @@ LAU[which(LAU$DFstatus %in% c('gone', 'missing')), 'DFstatus'] <- 'dead'
 sp_tbl <- table(LAU$sp, LAU$DFstatus)
 sp_tbl <- as.data.frame(sp_tbl)
 sp_tbl <- aggregate(sp_tbl$Freq, by = list(sp_tbl$Var1), FUN = sum)
-sp_tbl <- sp_tbl[which(sp_tbl$x > 200), ] # cutoff of 200 total stems
+sp_tbl <- sp_tbl[which(sp_tbl$x > 300), ] # cutoff of 200 total stems
 LAU <- LAU[which(LAU$sp %in% sp_tbl$Group.1), ]
 write.csv(LAU, '../data/LAU_processed.csv', row.names = F)

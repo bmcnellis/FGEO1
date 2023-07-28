@@ -2,6 +2,7 @@
 library(terra)
 
 topo_file <- '../data/TOPODATA.txt'
+LAU_DEM_fl <- '../data/LAU_DEM_mat.tif'
 
 tree_df <- read.csv('../../results/test_tree_df.csv')
 
@@ -11,8 +12,8 @@ LAU_df <- LAU_df[, c('GX5', 'GY5', 'ELEV')]
 colnames(LAU_df) <- c('x', 'y', 'z')
 # 260420, 2205378 UTM x, y for Laupahoehoe, zone 5, EPSG:32605
 LAU_rast <- terra::rast(LAU_df, crs = 'epsg:32605', extent = ext(c(260420, 260620, 2205378, 2205578)))
+# what is corner in epsg:4326? -155.2889, -155.2869, 19.9301, 19.93193
 # write rasterLAU_rast_fl
-LAU_DEM_fl <- '../data/LAU_DEM.tif'
 writeRaster(LAU_rast, LAU_DEM_fl, filetype = "GTIff")
 
 saga <- Rsagacmd::saga_gis(saga_bin = '../saga-9.0.2_x64/saga_cmd.exe', raster_backend = 'terra', cores = 2)
